@@ -24,6 +24,12 @@ export type Product = {
   image: ImagePlaceholder;
 };
 
+export type ProductForSearch = {
+    id: string;
+    name: string;
+    description: string;
+};
+
 export type ProductDetails = {
   id: string;
   name: string;
@@ -138,4 +144,18 @@ export async function getProductDetails(
       mapImage: mapImage,
     },
   };
+}
+
+export async function getAllProductsForSearch(): Promise<ProductForSearch[]> {
+  const productsCol = collection(db, 'products');
+  const productSnapshot = await getDocs(productsCol);
+  const productList = productSnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      name: data.name,
+      description: data.description,
+    } as ProductForSearch;
+  });
+  return productList;
 }

@@ -10,6 +10,8 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { getPublishedItems, PublishedItem } from '@/services/artisan-service';
 import { Skeleton } from '@/components/ui/skeleton';
 
+const ARTISAN_ID = 'artisan-ramesh';
+
 export default function ArtisanHomePage() {
   const [publishedItems, setPublishedItems] = useState<PublishedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +20,7 @@ export default function ArtisanHomePage() {
     const fetchItems = async () => {
       setIsLoading(true);
       try {
-        const items = await getPublishedItems();
+        const items = await getPublishedItems(ARTISAN_ID);
         setPublishedItems(items);
       } catch (error) {
         console.error("Error fetching published items:", error);
@@ -66,17 +68,15 @@ export default function ArtisanHomePage() {
                 publishedItems.map((item) => (
                   <CarouselItem key={item.id} className="pl-2 md:basis-1/2 lg:basis-1/3">
                     <div className="p-1">
-                       <Link href={`/customer/product/${item.id}`} passHref>
-                          <Card className="overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
-                            <CardContent className="flex flex-col aspect-square items-center justify-center p-0">
-                              <Image src={item.image.imageUrl} data-ai-hint={item.image.imageHint} alt={item.name} width={400} height={400} className="object-cover w-full h-full" />
-                              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
-                                <h3 className="font-headline text-lg text-white">{item.name}</h3>
-                                <p className="text-sm text-white/90">{item.price}</p>
-                              </div>
-                            </CardContent>
-                          </Card>
-                       </Link>
+                      <Card className="overflow-hidden shadow-sm">
+                        <CardContent className="flex flex-col aspect-square items-center justify-center p-0 relative">
+                          <Image src={item.image.imageUrl} data-ai-hint={item.image.imageHint} alt={item.name} width={400} height={400} className="object-cover w-full h-full" />
+                          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
+                            <h3 className="font-headline text-lg text-white">{item.name}</h3>
+                            <p className="text-sm text-white/90">{item.price}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   </CarouselItem>
                 ))

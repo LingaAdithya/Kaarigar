@@ -1,5 +1,6 @@
 {
   "firestore": {
-    "rules": "firestore.rules"
+    "rules": "firestore.rules",
+    "database": "projects/studio-8492004623-c48f3/databases/(default)"
   }
 }

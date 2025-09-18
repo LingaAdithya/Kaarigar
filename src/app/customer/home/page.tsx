@@ -9,12 +9,14 @@ import { getArtisansOfTheDay, getRegions, getCuratedProducts, Artisan, Region, P
 import { useEffect, useState } from 'react';
 import Autoplay from "embla-carousel-autoplay"
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from 'next/navigation';
 
 export default function CustomerHomePage() {
   const [artisans, setArtisans] = useState<Artisan[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,6 +38,15 @@ export default function CustomerHomePage() {
     };
     fetchData();
   }, []);
+
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const query = formData.get('search') as string;
+    if (query) {
+      router.push(`/customer/search?q=${encodeURIComponent(query)}`);
+    }
+  };
 
 
   return (
@@ -64,10 +75,10 @@ export default function CustomerHomePage() {
 
         <section className="mb-16 text-center">
             <h2 className="font-headline text-3xl mb-4">Dream It, Find It</h2>
-            <div className="relative max-w-2xl mx-auto">
+             <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input placeholder="Describe the art you are dreaming of..." className="pl-14 h-14 text-lg rounded-full shadow-inner bg-card border-border/80" />
-            </div>
+                <Input name="search" placeholder="Describe the art you are dreaming of..." className="pl-14 h-14 text-lg rounded-full shadow-inner bg-card border-border/80" />
+            </form>
         </section>
 
         <section className="mb-16">
@@ -78,7 +89,6 @@ export default function CustomerHomePage() {
                 <div key={region.id} className="flex-shrink-0 w-48 text-center group">
                   <div className="relative w-48 h-64 rounded-lg overflow-hidden shadow-md group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300">
                     {region.image && <Image src={region.image.imageUrl} alt={region.name} fill className="object-cover" data-ai-hint={region.image.imageHint} />}
-                    <div className="absolute inset-0 bg-black/30"></div>
                   </div>
                   <h3 className="font-headline text-xl mt-3">{region.name}</h3>
                 </div>

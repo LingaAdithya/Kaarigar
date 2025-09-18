@@ -1,7 +1,7 @@
 'use client';
 import {useState} from 'react';
 import {db} from '@/lib/firebase';
-import {writeBatch, collection, doc} from 'firebase/firestore';
+import {collection, doc, setDoc} from 'firebase/firestore';
 import {Button} from '@/components/ui/button';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Loader2} from 'lucide-react';
@@ -35,7 +35,7 @@ const artisansData = [
     bio: 'Ramesh has been carving wood for over 30 years, learning the craft from his father in their small village near Jaipur.',
     photo: {
       imageUrl: 'https://picsum.photos/seed/artisan-ramesh/100/100',
-      imageHint: 'indian man',
+      imageHint: 'indian artisan portrait',
     },
   },
 ];
@@ -45,32 +45,32 @@ const regionsData = [
     id: 'region-rajasthan',
     name: 'Rajasthan',
     image: {
-      imageUrl: 'https://picsum.photos/seed/rajasthan/400/500',
-      imageHint: 'rajasthan fort',
+      imageUrl: 'https://picsum.photos/seed/map-rajasthan/400/500',
+      imageHint: 'map of Rajasthan',
     },
   },
   {
     id: 'region-kerala',
     name: 'Kerala',
     image: {
-      imageUrl: 'https://picsum.photos/seed/kerala/400/500',
-      imageHint: 'kerala backwaters',
+      imageUrl: 'https://picsum.photos/seed/map-kerala/400/500',
+      imageHint: 'map of Kerala',
     },
   },
   {
     id: 'region-bengal',
     name: 'West Bengal',
     image: {
-      imageUrl: 'https://picsum.photos/seed/bengal/400/500',
-      imageHint: 'kolkata tram',
+      imageUrl: 'https://picsum.photos/seed/map-bengal/400/500',
+      imageHint: 'map of West Bengal',
     },
   },
   {
     id: 'region-gujarat',
     name: 'Gujarat',
     image: {
-      imageUrl: 'https://picsum.photos/seed/gujarat/400/500',
-      imageHint: 'gujarat textiles',
+      imageUrl: 'https://picsum.photos/seed/map-gujarat/400/500',
+      imageHint: 'map of Gujarat',
     },
   },
 ];
@@ -87,7 +87,7 @@ const productsData = [
     inspiration: 'Royal heritage of Rajasthan',
     image: {
       imageUrl: 'https://picsum.photos/seed/prod1/400/500',
-      imageHint: 'handicraft elephant',
+      imageHint: 'wooden elephant carving',
     },
     createdAt: new Date(),
   },
@@ -102,7 +102,7 @@ const productsData = [
     inspiration: 'Traditional festival of lights',
     image: {
       imageUrl: 'https://picsum.photos/seed/prod2/400/400',
-      imageHint: 'clay lamp',
+      imageHint: 'terracotta clay lamp',
     },
     createdAt: new Date(),
   },
@@ -117,7 +117,7 @@ const productsData = [
     inspiration: 'The serene beauty of the Himalayas',
     image: {
       imageUrl: 'https://picsum.photos/seed/prod3/400/600',
-      imageHint: 'pashmina shawl',
+      imageHint: 'handwoven pashmina shawl',
     },
     createdAt: new Date(),
   },
@@ -132,7 +132,7 @@ const productsData = [
     inspiration: 'Hindu mythology and divine blessings',
     image: {
       imageUrl: 'https://picsum.photos/seed/prod4/400/500',
-      imageHint: 'ganesha statue',
+      imageHint: 'brass ganesha statue',
     },
     createdAt: new Date(),
   },
@@ -178,41 +178,33 @@ export default function SeedDatabasePage() {
     });
 
     try {
-      const batch = writeBatch(db);
-
-      // Seed Artisans
       const artisansCol = collection(db, 'artisans');
-      artisansData.forEach(artisan => {
+      for (const artisan of artisansData) {
         const {id, ...artisanData} = artisan;
         const artisanRef = doc(artisansCol, id);
-        batch.set(artisanRef, artisanData);
-      });
+        await setDoc(artisanRef, artisanData);
+      }
 
-      // Seed Regions
       const regionsCol = collection(db, 'regions');
-      regionsData.forEach(region => {
+      for (const region of regionsData) {
         const {id, ...regionData} = region;
         const regionRef = doc(regionsCol, id);
-        batch.set(regionRef, regionData);
-      });
+        await setDoc(regionRef, regionData);
+      }
       
-      // Seed Products
       const productsCol = collection(db, 'products');
-      productsData.forEach(product => {
+      for (const product of productsData) {
         const { id, ...productData } = product;
         const productRef = doc(productsCol, id);
-        batch.set(productRef, productData);
-      });
+        await setDoc(productRef, productData);
+      }
 
-      // Seed Orders
       const ordersCol = collection(db, 'orders');
-      ordersData.forEach(order => {
+      for (const order of ordersData) {
         const { id, ...orderData } = order;
         const orderRef = doc(ordersCol, id);
-        batch.set(orderRef, orderData);
-      });
-
-      await batch.commit();
+        await setDoc(orderRef, orderData);
+      }
 
       toast({
         title: 'Database Seeded Successfully!',

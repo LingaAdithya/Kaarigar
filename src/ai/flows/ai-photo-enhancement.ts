@@ -7,8 +7,19 @@
  * - EnhancePhotoOutput - The return type for the enhancePhoto function, providing the enhanced photo as a data URI.
  */
 
-import {ai} from '@/ai/genkit';
+import {genkit} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 import {z} from 'genkit';
+
+// Create a separate AI client for image enhancement to use a dedicated API key.
+const imageAI = genkit({
+  plugins: [
+    googleAI({
+      apiKey: process.env.GEMINI_IMAGE_API_KEY,
+    }),
+  ],
+});
+
 
 const EnhancePhotoInputSchema = z.object({
   photoDataUri: z
@@ -30,19 +41,19 @@ export async function enhancePhoto(input: EnhancePhotoInput): Promise<EnhancePho
   return enhancePhotoFlow(input);
 }
 
-const enhancePhotoFlow = ai.defineFlow(
+const enhancePhotoFlow = imageAI.defineFlow(
   {
     name: 'enhancePhotoFlow',
     inputSchema: EnhancePhotoInputSchema,
     outputSchema: EnhancePhotoOutputSchema,
   },
   async input => {
-    const {media} = await ai.generate({
+    const {media} = await imageAI.generate({
       model: 'googleai/gemini-2.5-flash-image-preview',
       prompt: [
         {media: {url: input.photoDataUri}},
         {
-          text: 'enhance this photo so that it looks professional. Improve resolution, lighting, and composition.',
+          text: 'Analyze the main subject in the provided image. Generate a new, photorealistic product photo of that exact subject from a direct front angle. Place it with professional studio lighting',
         },
       ],
       config: {
