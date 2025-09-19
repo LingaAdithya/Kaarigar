@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Search, ShoppingCart, User } from 'lucide-react';
+import { LanguageSwitcher, T } from '../language-provider';
 
 function Logo() {
   return (
     <Link href="/customer/home" className="font-headline text-2xl font-bold text-foreground">
-      Karigar Konnect
+      <T>Karigar Konnect</T>
     </Link>
   );
 }
@@ -17,6 +18,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         <div className="container flex h-16 items-center justify-between">
           <Logo />
           <nav className="flex items-center gap-1">
+            <LanguageSwitcher />
             <Button variant="ghost" size="icon">
               <Search className="h-5 w-5" />
               <span className="sr-only">Search</span>

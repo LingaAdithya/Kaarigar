@@ -7,12 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { KolamIcon } from '@/components/icons/KolamIcon';
 import { AlpanaIcon } from '@/components/icons/AlpanaIcon';
+import { useLanguage, T } from './language-provider';
 
 const languages = [
   { name: 'English', script: 'English', motif: <KolamIcon className="w-8 h-8 text-muted-foreground" /> },
-  { name: 'हिन्दी', script: 'हिन्दी', motif: <AlpanaIcon className="w-8 h-8 text-muted-foreground" /> },
-  { name: 'தமிழ்', script: 'தமிழ்', motif: <KolamIcon className="w-8 h-8 text-muted-foreground" /> },
-  { name: 'বাংলা', script: 'বাংলা', motif: <AlpanaIcon className="w-8 h-8 text-muted-foreground" /> },
+  { name: 'Hindi', script: 'हिन्दी', motif: <AlpanaIcon className="w-8 h-8 text-muted-foreground" /> },
+  { name: 'Tamil', script: 'தமிழ்', motif: <KolamIcon className="w-8 h-8 text-muted-foreground" /> },
+  { name: 'Bengali', script: 'বাংলা', motif: <AlpanaIcon className="w-8 h-8 text-muted-foreground" /> },
 ];
 
 function LanguageSelection({ onSelect, selectedLanguage }: { onSelect: (lang: string) => void, selectedLanguage: string | null }) {
@@ -46,14 +47,14 @@ function LanguageSelection({ onSelect, selectedLanguage }: { onSelect: (lang: st
 function RoleSelection() {
   return (
     <div className="text-center animate-in fade-in duration-500">
-      <h1 className="font-headline text-4xl md:text-5xl mb-4">Who are you?</h1>
-      <p className="text-xl md:text-2xl text-foreground/80 mb-12">Choose your journey with Karigar Konnect.</p>
+      <h1 className="font-headline text-4xl md:text-5xl mb-4"><T>Who are you?</T></h1>
+      <p className="text-xl md:text-2xl text-foreground/80 mb-12"><T>Choose your journey with Karigar Konnect.</T></p>
       <div className="flex flex-col md:flex-row gap-6 justify-center">
         <Link href="/artisan/home" passHref>
-          <Button variant="default" size="lg" className="h-auto py-4 px-8 text-lg w-full md:w-auto shadow-lg hover:shadow-xl transition-shadow">I am an Artisan</Button>
+          <Button variant="default" size="lg" className="h-auto py-4 px-8 text-lg w-full md:w-auto shadow-lg hover:shadow-xl transition-shadow"><T>I am an Artisan</T></Button>
         </Link>
         <Link href="/customer/home" passHref>
-          <Button variant="outline" size="lg" className="h-auto py-4 px-8 text-lg w-full md:w-auto bg-card hover:bg-secondary">I am a Customer</Button>
+          <Button variant="outline" size="lg" className="h-auto py-4 px-8 text-lg w-full md:w-auto bg-card hover:bg-secondary"><T>I am a Customer</T></Button>
         </Link>
       </div>
     </div>
@@ -61,12 +62,18 @@ function RoleSelection() {
 }
 
 export default function WelcomePage() {
-  const [language, setLanguage] = useState<string | null>(null);
+  const { language, setLanguage } = useLanguage();
+  const [hasSelected, setHasSelected] = useState(false);
+
+  const handleSelectLanguage = (lang: string) => {
+    setLanguage(lang);
+    setHasSelected(true);
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background text-foreground">
-      {!language ? (
-        <LanguageSelection onSelect={setLanguage} selectedLanguage={language} />
+      {!hasSelected ? (
+        <LanguageSelection onSelect={handleSelectLanguage} selectedLanguage={language} />
       ) : (
         <RoleSelection />
       )}

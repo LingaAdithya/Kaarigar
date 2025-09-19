@@ -15,6 +15,7 @@ import { Loader2, Volume2 } from 'lucide-react';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { T, useLanguage } from '@/app/language-provider';
 
 function ProductPageContent({ id }: { id: string }) {
   const [product, setProduct] = useState<ProductDetails | null>(null);
@@ -23,6 +24,9 @@ function ProductPageContent({ id }: { id: string }) {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
+  const { t, language } = useLanguage();
+
+  const [translatedBio, setTranslatedBio] = useState('');
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -49,14 +53,18 @@ function ProductPageContent({ id }: { id: string }) {
       audioRef.current.play();
     }
   }, [audioUrl]);
-
+  
   const handleHearStory = async () => {
     if (!product) return;
-
+  
     setIsGeneratingAudio(true);
     setAudioUrl(null);
+  
+    // Use the translated bio if available, otherwise use original
+    const storyText = translatedBio || product.artisan.bio;
+
     try {
-      const { audioDataUri } = await textToSpeech(product.artisan.bio);
+      const { audioDataUri } = await textToSpeech(storyText);
       if (audioDataUri) {
         setAudioUrl(audioDataUri);
       } else {
@@ -66,13 +74,24 @@ function ProductPageContent({ id }: { id: string }) {
       console.error('Error generating audio:', error);
       toast({
         variant: 'destructive',
-        title: 'Audio Generation Failed',
-        description: 'Could not generate the audio story. Please try again.',
+        title: t('Audio Generation Failed'),
+        description: t('Could not generate the audio story. Please try again.'),
       });
     } finally {
       setIsGeneratingAudio(false);
     }
   };
+
+  // Effect to handle translation of the bio
+  useEffect(() => {
+    if (product?.artisan.bio) {
+        const translated = t(product.artisan.bio);
+        if(translated) {
+            setTranslatedBio(translated);
+        }
+    }
+  }, [product, t]);
+
 
   if (isLoading) {
     return <ProductPageSkeleton />;
@@ -108,8 +127,8 @@ function ProductPageContent({ id }: { id: string }) {
 
           <div>
             <section className="mb-6">
-              <h1 className="font-headline text-4xl md:text-5xl mb-4">{product.name}</h1>
-              <p className="text-lg leading-relaxed text-foreground/90">{product.story}</p>
+              <h1 className="font-headline text-4xl md:text-5xl mb-4"><T>{product.name}</T></h1>
+              <p className="text-lg leading-relaxed text-foreground/90"><T>{product.story}</T></p>
             </section>
             
             <Separator className="my-6" />
@@ -117,32 +136,32 @@ function ProductPageContent({ id }: { id: string }) {
             <section className="mb-6">
               <Card className="bg-card/50 border-border/50 shadow-sm">
                 <CardContent className="p-6">
-                  <h2 className="font-headline text-2xl mb-4">Meet the Artisan</h2>
+                  <h2 className="font-headline text-2xl mb-4"><T>Meet the Artisan</T></h2>
                   <div className="flex items-center gap-4 mb-4">
                     <Avatar className="w-16 h-16">
                       {artisan.photo && <AvatarImage src={artisan.photo.imageUrl} alt={artisan.name} data-ai-hint={artisan.photo.imageHint} />}
                       <AvatarFallback>{artisan.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold text-lg">{artisan.name}</h3>
-                      <p className="text-sm text-muted-foreground">{artisan.bio}</p>
+                      <h3 className="font-semibold text-lg"><T>{artisan.name}</T></h3>
+                      <p className="text-sm text-muted-foreground">{translatedBio || <T>{artisan.bio}</T>}</p>
                     </div>
                   </div>
                   <Button variant="outline" className="w-full bg-card hover:bg-secondary" onClick={handleHearStory} disabled={isGeneratingAudio}>
                     {isGeneratingAudio ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Generating...
+                        <T>Generating...</T>
                       </>
                     ) : audioUrl ? (
                       <>
                         <Volume2 className="w-5 h-5 mr-2" />
-                        Playing Story...
+                        <T>Playing Story...</T>
                       </>
                     ) : (
                       <>
                         <PlayIcon className="w-5 h-5 mr-2" />
-                        Hear their Story
+                        <T>Hear their Story</T>
                       </>
                     )}
                   </Button>
@@ -153,19 +172,19 @@ function ProductPageContent({ id }: { id: string }) {
             <Separator className="my-6" />
 
             <section className="mb-6">
-                <h2 className="font-headline text-2xl mb-4">Details</h2>
+                <h2 className="font-headline text-2xl mb-4"><T>Details</T></h2>
                 <ul className="space-y-2">
                     {product.details.map(detail => (
                         <li key={detail.label} className="flex justify-between">
-                            <span className="text-muted-foreground">{detail.label}</span>
-                            <span className="font-medium text-right">{detail.value}</span>
+                            <span className="text-muted-foreground"><T>{detail.label}</T></span>
+                            <span className="font-medium text-right"><T>{detail.value}</T></span>
                         </li>
                     ))}
                 </ul>
             </section>
 
             <section className="mb-6">
-                 <h2 className="font-headline text-2xl mb-4">Artisan's Region</h2>
+                 <h2 className="font-headline text-2xl mb-4"><T>Artisan's Region</T></h2>
                  <div className="aspect-video relative rounded-lg overflow-hidden shadow-md">
                     {origin && <GoogleMapEmbed origin={origin} />}
                  </div>
@@ -177,10 +196,10 @@ function ProductPageContent({ id }: { id: string }) {
       <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-t border-border z-10">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
             <div>
-                <p className="text-sm text-muted-foreground">Price</p>
+                <p className="text-sm text-muted-foreground"><T>Price</T></p>
                 <p className="font-headline text-2xl">{product.price}</p>
             </div>
-            <Button size="lg" className="text-lg">Add to Cart</Button>
+            <Button size="lg" className="text-lg"><T>Add to Cart</T></Button>
         </div>
       </div>
       {audioUrl && <audio ref={audioRef} src={audioUrl} onEnded={() => setAudioUrl(null)} />}

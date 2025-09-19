@@ -17,6 +17,7 @@ import { enhancePhoto } from '@/ai/flows/ai-photo-enhancement';
 import { ImageComparisonSlider } from '@/components/image-comparison-slider';
 import { addProduct } from '@/services/artisan-service';
 import { Progress } from '@/components/ui/progress';
+import { T, useLanguage } from '@/app/language-provider';
 
 type NewProduct = Parameters<typeof addProduct>[0];
 
@@ -30,6 +31,7 @@ enum PageState {
 export default function AddProductPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const { t } = useLanguage();
   
   const [pageState, setPageState] = useState<PageState>(PageState.FORM);
   const [formData, setFormData] = useState<Partial<ArtisanVoiceToListingOutput>>({});
@@ -59,14 +61,14 @@ export default function AddProductPage() {
           setHasCameraPermission(false);
           toast({
             variant: 'destructive',
-            title: 'Camera Access Denied',
-            description: 'Please enable camera permissions in your browser settings.',
+            title: t('Camera Access Denied'),
+            description: t('Please enable camera permissions in your browser settings.'),
           });
         }
       };
       getCameraPermission();
     }
-  }, [showCamera, toast]);
+  }, [showCamera, toast, t]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -108,8 +110,8 @@ export default function AddProductPage() {
     if (!originalImage) {
         toast({
             variant: "destructive",
-            title: "Image Missing",
-            description: "Please upload or capture a photo first.",
+            title: t("Image Missing"),
+            description: t("Please upload or capture a photo first."),
         });
         return;
     }
@@ -118,15 +120,15 @@ export default function AddProductPage() {
         const result = await generateDetailsFromImage({ photoDataUri: originalImage });
         setFormData(prev => ({ ...prev, ...result }));
         toast({
-            title: "Product Details Generated!",
-            description: "We've filled in the form based on the product image.",
+            title: t("Product Details Generated!"),
+            description: t("We've filled in the form based on the product image."),
         });
     } catch (error) {
         console.error("Error generating details from image:", error);
         toast({
             variant: "destructive",
-            title: "AI Processing Failed",
-            description: "We couldn't analyze your photo. Please try again or fill the form manually.",
+            title: t("AI Processing Failed"),
+            description: t("We couldn't analyze your photo. Please try again or fill the form manually."),
         });
     } finally {
         setIsGeneratingDetails(false);
@@ -137,8 +139,8 @@ export default function AddProductPage() {
     if (!originalImage) {
         toast({
             variant: "destructive",
-            title: "Image Missing",
-            description: "Please upload or capture a photo before describing your product.",
+            title: t("Image Missing"),
+            description: t("Please upload or capture a photo before describing your product."),
         });
         return;
     }
@@ -152,8 +154,8 @@ export default function AddProductPage() {
       if (!result.isMatch) {
         toast({
           variant: "destructive",
-          title: "Voice Description Mismatch",
-          description: "Your voice description doesn't seem to match the product photo. Please try recording again.",
+          title: t("Voice Description Mismatch"),
+          description: t("Your voice description doesn't seem to match the product photo. Please try recording again."),
           duration: 5000,
         });
         return;
@@ -164,15 +166,15 @@ export default function AddProductPage() {
         ...result,
       }));
       toast({
-        title: "Product Details Generated!",
-        description: "We've filled in the form with the details from your recording.",
+        title: t("Product Details Generated!"),
+        description: t("We've filled in the form with the details from your recording."),
       });
     } catch (error) {
       console.error("Error generating details from voice:", error);
       toast({
         variant: "destructive",
-        title: "AI Processing Failed",
-        description: "We couldn't process your voice recording. Please try again or fill the form manually.",
+        title: t("AI Processing Failed"),
+        description: t("We couldn't process your voice recording. Please try again or fill the form manually."),
       });
     } finally {
       setIsGeneratingDetails(false);
@@ -187,8 +189,8 @@ export default function AddProductPage() {
       if (!originalImage) {
         toast({
             variant: "destructive",
-            title: "Upload a Photo First",
-            description: "Please upload or capture a photo of your product before recording.",
+            title: t("Upload a Photo First"),
+            description: t("Please upload or capture a photo of your product before recording."),
         });
         return;
       }
@@ -218,8 +220,8 @@ export default function AddProductPage() {
         console.error("Error accessing microphone:", error);
         toast({
             variant: "destructive",
-            title: "Microphone Access Denied",
-            description: "Please enable microphone permissions in your browser settings.",
+            title: t("Microphone Access Denied"),
+            description: t("Please enable microphone permissions in your browser settings."),
         });
       }
     }
@@ -235,15 +237,15 @@ export default function AddProductPage() {
       setEnhancedImage(result.enhancedPhotoDataUri);
       setPageState(PageState.ENHANCED);
        toast({
-        title: "Image Enhanced!",
-        description: "Our AI has worked its magic. Compare the results.",
+        title: t("Image Enhanced!"),
+        description: t("Our AI has worked its magic. Compare the results."),
       });
     } catch (error) {
        console.error("Error enhancing image:", error);
        toast({
         variant: "destructive",
-        title: "AI Enhancement Failed",
-        description: "We couldn't enhance your image. Please try again.",
+        title: t("AI Enhancement Failed"),
+        description: t("We couldn't enhance your image. Please try again."),
       });
       setPageState(PageState.FORM);
     }
@@ -255,7 +257,7 @@ export default function AddProductPage() {
     const imageToSubmit = useEnhancedImage ? enhancedImage : originalImage;
 
     if (!imageToSubmit) {
-      toast({ variant: 'destructive', title: 'No image to submit' });
+      toast({ variant: 'destructive', title: t('No image to submit') });
       setPageState(PageState.FORM);
       return;
     }
@@ -271,8 +273,8 @@ export default function AddProductPage() {
       };
       await addProduct(productData, imageToSubmit, setUploadProgress);
       toast({
-          title: "Masterpiece Listed!",
-          description: "Your new product is now available in the marketplace.",
+          title: t("Masterpiece Listed!"),
+          description: t("Your new product is now available in the marketplace."),
       });
       // A short delay to let the user see the "complete" state
       setTimeout(() => router.push('/artisan/home'), 1000);
@@ -280,8 +282,8 @@ export default function AddProductPage() {
       console.error("Error submitting to backend:", error);
       toast({
           variant: 'destructive',
-          title: "Submission Failed",
-          description: "There was an error listing your product. Please try again.",
+          title: t("Submission Failed"),
+          description: t("There was an error listing your product. Please try again."),
       });
       setPageState(PageState.FORM);
     }
@@ -293,8 +295,8 @@ export default function AddProductPage() {
         return (
             <div className="text-center p-8 flex flex-col items-center justify-center h-96">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                <h2 className="font-headline text-2xl mb-2">Enhancing your photo...</h2>
-                <p className="text-muted-foreground">Our AI is working its magic. Please wait a moment.</p>
+                <h2 className="font-headline text-2xl mb-2"><T>Enhancing your photo...</T></h2>
+                <p className="text-muted-foreground"><T>Our AI is working its magic. Please wait a moment.</T></p>
             </div>
         );
       case PageState.ENHANCED:
@@ -302,10 +304,10 @@ export default function AddProductPage() {
         return (
           <div className="p-4 md:p-6">
             <Button variant="ghost" onClick={() => setPageState(PageState.FORM)} className="mb-4">
-              <ArrowLeft className="mr-2" /> Back to Edit
+              <ArrowLeft className="mr-2" /> <T>Back to Edit</T>
             </Button>
-            <h1 className="font-headline text-3xl text-center mb-2 text-primary">Made Beautiful!</h1>
-            <p className="text-muted-foreground text-center mb-8">Drag the slider to see the difference.</p>
+            <h1 className="font-headline text-3xl text-center mb-2 text-primary"><T>Made Beautiful!</T></h1>
+            <p className="text-muted-foreground text-center mb-8"><T>Drag the slider to see the difference.</T></p>
             <ImageComparisonSlider 
                 beforeImage={originalImage}
                 afterImage={enhancedImage}
@@ -314,7 +316,7 @@ export default function AddProductPage() {
             />
             <div className="mt-8 text-center">
                 <Button size="lg" onClick={() => handleFinalSubmit(true)}>
-                    <Wand2 className="mr-2" /> Looks Great, Create Listing
+                    <Wand2 className="mr-2" /> <T>Looks Great, Create Listing</T>
                 </Button>
             </div>
           </div>
@@ -324,14 +326,14 @@ export default function AddProductPage() {
             <div className="text-center p-8 flex flex-col items-center justify-center h-96">
                 {uploadProgress < 100 ? (
                   <>
-                    <h2 className="font-headline text-2xl mb-4">Listing your Masterpiece...</h2>
+                    <h2 className="font-headline text-2xl mb-4"><T>Listing your Masterpiece...</T></h2>
                     <Progress value={uploadProgress} className="w-full max-w-sm mb-2" />
                     <p className="text-muted-foreground font-mono">{Math.round(uploadProgress)}%</p>
                   </>
                 ) : (
                   <>
-                    <h2 className="font-headline text-2xl mb-2">Upload Complete!</h2>
-                    <p className="text-muted-foreground">Finalizing your listing...</p>
+                    <h2 className="font-headline text-2xl mb-2"><T>Upload Complete!</T></h2>
+                    <p className="text-muted-foreground"><T>Finalizing your listing...</T></p>
                   </>
                 )}
 
@@ -342,46 +344,46 @@ export default function AddProductPage() {
         return (
           <>
             <CardHeader>
-              <CardTitle>Product Details</CardTitle>
+              <CardTitle><T>Product Details</T></CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreateListing}>
                 <div className="grid gap-6">
 
                   <div className="space-y-2">
-                    <Label>1. Product Photo</Label>
+                    <Label><T>1. Product Photo</T></Label>
                     <div className="flex items-center justify-center w-full">
                       <div className="w-full">
                         {originalImage ? (
                             <div className="relative">
-                                <Image src={originalImage} alt="Uploaded preview" width={400} height={400} className="object-contain h-full w-full rounded-lg" />
-                                <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => setOriginalImage(null)}>Remove</Button>
+                                <Image src={originalImage} alt={t("Uploaded preview")} width={400} height={400} className="object-contain h-full w-full rounded-lg" />
+                                <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => setOriginalImage(null)}><T>Remove</T></Button>
                             </div>
                         ) : showCamera ? (
                           <div className="flex flex-col items-center gap-4">
                             <video ref={videoRef} className="w-full aspect-video rounded-md bg-secondary" autoPlay muted playsInline />
                             {hasCameraPermission === false && (
                                 <Alert variant="destructive">
-                                    <AlertTitle>Camera Access Required</AlertTitle>
+                                    <AlertTitle><T>Camera Access Required</T></AlertTitle>
                                     <AlertDescription>
-                                    Please allow camera access to use this feature.
+                                    <T>Please allow camera access to use this feature.</T>
                                     </AlertDescription>
                                 </Alert>
                             )}
                             <Button type="button" onClick={handleCaptureFromCamera} disabled={!hasCameraPermission}>
-                                <Camera className="mr-2" /> Capture
+                                <Camera className="mr-2" /> <T>Capture</T>
                             </Button>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg bg-card hover:bg-secondary transition-colors text-center p-4">
                             <Button type="button" variant="outline" className="mb-4" onClick={() => document.getElementById('dropzone-file')?.click()}>
-                                <Upload className="mr-2" /> Upload a File
+                                <Upload className="mr-2" /> <T>Upload a File</T>
                             </Button>
-                            <p className="text-muted-foreground mb-2">or</p>
+                            <p className="text-muted-foreground mb-2"><T>or</T></p>
                             <Button type="button" variant="outline" onClick={() => setShowCamera(true)}>
-                                <Camera className="mr-2" /> Use Camera
+                                <Camera className="mr-2" /> <T>Use Camera</T>
                             </Button>
-                            <p className="text-xs text-muted-foreground mt-4">SVG, PNG, JPG or GIF</p>
+                            <p className="text-xs text-muted-foreground mt-4"><T>SVG, PNG, JPG or GIF</T></p>
                             <Input id="dropzone-file" type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
                           </div>
                         )}
@@ -390,65 +392,65 @@ export default function AddProductPage() {
                   </div>
                   
                   <div className="space-y-2">
-                      <Label>2. Let AI help you</Label>
+                      <Label><T>2. Let AI help you</T></Label>
                       <div className="grid grid-cols-2 gap-2">
                           <Button type="button" variant="outline" className="w-full" onClick={toggleRecording} disabled={isGeneratingDetails || !originalImage}>
                               {isRecording && <StopCircle className="mr-2 h-4 w-4 text-red-500" />}
                               {!isRecording && <Mic className="mr-2 h-4 w-4" />}
-                              {isRecording ? 'Stop Recording' : 'Describe with Voice'}
+                              {isRecording ? <T>Stop Recording</T> : <T>Describe with Voice</T>}
                           </Button>
                           <Button type="button" variant="outline" className="w-full" onClick={handleGenerateDetailsFromImage} disabled={isGeneratingDetails || !originalImage}>
                               <Wand2 className="mr-2 h-4 w-4" />
-                              Generate from Photo
+                              <T>Generate from Photo</T>
                           </Button>
                       </div>
                       {isGeneratingDetails && (
                         <div className="flex items-center justify-center text-sm text-muted-foreground">
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            AI is thinking...
+                            <T>AI is thinking...</T>
                         </div>
                       )}
-                      {!originalImage && <p className="text-xs text-muted-foreground text-center">Please upload a photo before using AI tools.</p>}
+                      {!originalImage && <p className="text-xs text-muted-foreground text-center"><T>Please upload a photo before using AI tools.</T></p>}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="productName">3. Product Name</Label>
-                    <Input id="productName" placeholder="e.g., 'Royal Elephant Pair'" value={formData.productName || ''} onChange={handleInputChange} />
+                    <Label htmlFor="productName"><T>3. Product Name</T></Label>
+                    <Input id="productName" placeholder={t("e.g., 'Royal Elephant Pair'")} value={formData.productName || ''} onChange={handleInputChange} />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">4. Description</Label>
-                    <Textarea id="description" placeholder="Describe your artwork, its story, and what makes it unique." value={formData.description || ''} onChange={handleInputChange} />
+                    <Label htmlFor="description"><T>4. Description</T></Label>
+                    <Textarea id="description" placeholder={t("Describe your artwork, its story, and what makes it unique.")} value={formData.description || ''} onChange={handleInputChange} />
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="materials">Materials</Label>
-                        <Input id="materials" placeholder="e.g., Rosewood, Natural Pigments" value={formData.materials || ''} onChange={handleInputChange} />
+                        <Label htmlFor="materials"><T>Materials</T></Label>
+                        <Input id="materials" placeholder={t("e.g., Rosewood, Natural Pigments")} value={formData.materials || ''} onChange={handleInputChange} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="origin">Origin</Label>
-                        <Input id="origin" placeholder="e.g., Jaipur, Rajasthan" value={formData.origin || ''} onChange={handleInputChange} />
+                        <Label htmlFor="origin"><T>Origin</T></Label>
+                        <Input id="origin" placeholder={t("e.g., Jaipur, Rajasthan")} value={formData.origin || ''} onChange={handleInputChange} />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="inspiration">Inspiration</Label>
-                    <Input id="inspiration" placeholder="e.g., Royal heritage of Rajasthan" value={formData.inspiration || ''} onChange={handleInputChange} />
+                    <Label htmlFor="inspiration"><T>Inspiration</T></Label>
+                    <Input id="inspiration" placeholder={t("e.g., Royal heritage of Rajasthan")} value={formData.inspiration || ''} onChange={handleInputChange} />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price (₹)</Label>
-                    <Input id="price" type="number" placeholder="e.g., 2300" value={formData.price || ''} onChange={handleInputChange} />
+                    <Label htmlFor="price"><T>Price (₹)</T></Label>
+                    <Input id="price" type="number" placeholder={t("e.g., 2300")} value={formData.price || ''} onChange={handleInputChange} />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Button type="submit" size="lg" disabled={!originalImage}>
                         <Wand2 className="mr-2 h-5 w-5" />
-                        Enhance with AI
+                        <T>Enhance with AI</T>
                     </Button>
                      <Button type="button" size="lg" variant="secondary" disabled={!originalImage} onClick={() => handleFinalSubmit(false)}>
-                        List without Enhancement
+                        <T>List without Enhancement</T>
                         <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </div>
@@ -465,9 +467,9 @@ export default function AddProductPage() {
     <div className="container mx-auto max-w-2xl py-8">
        {pageState === PageState.FORM && (
         <>
-            <h1 className="font-headline text-3xl md:text-4xl mb-2 text-center">Add Your Masterpiece</h1>
+            <h1 className="font-headline text-3xl md:text-4xl mb-2 text-center"><T>Add Your Masterpiece</T></h1>
             <p className="text-muted-foreground text-center mb-8">
-                Fill in the details below or use our AI tools to get started.
+                <T>Fill in the details below or use our AI tools to get started.</T>
             </p>
         </>
        )}

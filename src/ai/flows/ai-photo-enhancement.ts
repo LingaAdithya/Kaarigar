@@ -53,7 +53,7 @@ const enhancePhotoFlow = imageAI.defineFlow(
       prompt: [
         {media: {url: input.photoDataUri}},
         {
-          text: 'Analyze the main subject in the provided image. Generate a new, photorealistic product photo of that exact subject from a direct front angle. Place it with professional studio lighting',
+          text: 'Analyze the main subject in the provided image. Generate 3 new, photorealistic product photo of that exact subject from a direct front angle, a direct back angle and a direct side angle. Place it with professional studio lighting',
         },
       ],
       config: {
