@@ -61,9 +61,8 @@ export default function CustomerHomePage() {
               <CarouselContent>
                 {artisans.map((artisan) => (
                   <CarouselItem key={artisan.id}>
-                    <div className="relative aspect-[3/2] md:aspect-[2.5/1] w-full rounded-lg overflow-hidden shadow-lg">
-                      {artisan.photo && <Image src={artisan.photo.imageUrl} alt={artisan.name} fill className="object-cover" data-ai-hint={artisan.photo.imageHint} />}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-8 text-white">
+                    <div className="relative aspect-[3/2] md:aspect-[2.5/1] w-full rounded-lg overflow-hidden shadow-lg bg-gradient-to-br from-primary/20 via-background to-secondary/20">
+                      <div className="absolute inset-0 flex flex-col justify-center items-center p-8 text-center text-foreground">
                         <h3 className="text-sm font-semibold uppercase tracking-widest"><T>Artisan of the Day</T></h3>
                         <h2 className="font-headline text-4xl md:text-6xl"><T>{artisan.name}</T></h2>
                         <p className="text-lg"><T>{artisan.craft}</T></p>

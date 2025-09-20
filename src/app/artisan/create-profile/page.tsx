@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -11,7 +12,7 @@ import { Mic, StopCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { T, useLanguage } from '@/app/language-provider';
 import { createArtisanProfile } from '@/services/artisan-service';
-import { artisanVoiceToListing } from '@/ai/flows/artisan-voice-to-listing'; // We need this for speech-to-text
+import { speechToText } from '@/ai/flows/speech-to-text';
 import { enhanceArtisanStory } from '@/ai/flows/enhance-artisan-story';
 
 export default function CreateArtisanProfilePage() {
@@ -21,52 +22,57 @@ export default function CreateArtisanProfilePage() {
     const [name, setName] = useState('');
     const [story, setStory] = useState('');
     const [isRecording, setIsRecording] = useState(false);
+    const [recordingTarget, setRecordingTarget] = useState<'name' | 'story' | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
-    const handleVoiceToText = async (voiceRecordingDataUri: string) => {
+    const handleVoiceToText = async (voiceRecordingDataUri: string, target: 'name' | 'story') => {
         setIsProcessing(true);
         toast({
-            title: t('Processing your story...'),
-            description: t('Our AI is crafting a beautiful narrative for you.'),
+            title: target === 'name' ? t('Processing name...') : t('Processing your story...'),
+            description: target === 'story' ? t('Our AI is crafting a beautiful narrative for you.') : undefined,
         });
         
         try {
-            // 1. Get transcript (re-using artisanVoiceToListing for speech-to-text part)
-            const speechResult = await artisanVoiceToListing({
-                photoDataUri: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", // Dummy image
-                voiceRecordingDataUri
-            });
-            const transcript = speechResult.description; // We'll just grab the transcribed text
+            const result = await speechToText({ voiceRecordingDataUri });
+            const transcript = result.transcript;
             
             if (!transcript) {
                 throw new Error("Could not understand audio.");
             }
 
-            // 2. Enhance the story
-            const storyResult = await enhanceArtisanStory({ transcript });
-            setStory(storyResult.enhancedStory);
-
-            toast({
-                title: t('Story Enhanced!'),
-                description: t('We\'ve written your story. You can edit it below.'),
-            });
+            if (target === 'story') {
+                // Enhance the story
+                const storyResult = await enhanceArtisanStory({ transcript });
+                setStory(storyResult.enhancedStory);
+                toast({
+                    title: t('Story Enhanced!'),
+                    description: t('We\'ve written your story. You can edit it below.'),
+                });
+            } else { // target === 'name'
+                setName(transcript);
+                 toast({
+                    title: t('Name Captured!'),
+                    description: t('We\'ve filled in your name.'),
+                });
+            }
 
         } catch (error) {
-            console.error("Error processing voice story:", error);
+            console.error("Error processing voice input:", error);
             toast({
                 variant: 'destructive',
                 title: t('AI Processing Failed'),
-                description: t('We couldn\'t process your voice recording. Please try again or type your story manually.'),
+                description: t('We couldn\'t process your voice recording. Please try again or type manually.'),
             });
         } finally {
             setIsProcessing(false);
+            setRecordingTarget(null);
         }
     };
 
-    const toggleRecording = async () => {
+    const toggleRecording = async (target: 'name' | 'story') => {
         if (isRecording) {
             mediaRecorderRef.current?.stop();
             setIsRecording(false);
@@ -75,6 +81,7 @@ export default function CreateArtisanProfilePage() {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                 audioChunksRef.current = [];
+                setRecordingTarget(target);
 
                 mediaRecorderRef.current.ondataavailable = (event) => {
                     audioChunksRef.current.push(event.data);
@@ -85,7 +92,7 @@ export default function CreateArtisanProfilePage() {
                     const reader = new FileReader();
                     reader.onloadend = () => {
                         const voiceRecordingDataUri = reader.result as string;
-                        handleVoiceToText(voiceRecordingDataUri);
+                        handleVoiceToText(voiceRecordingDataUri, target);
                     };
                     reader.readAsDataURL(audioBlob);
                     stream.getTracks().forEach(track => track.stop());
@@ -143,17 +150,23 @@ export default function CreateArtisanProfilePage() {
                     <form onSubmit={handleSubmit} className="grid gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="name"><T>Your Name</T></Label>
-                            <Input 
-                                id="name" 
-                                value={name} 
-                                onChange={(e) => setName(e.target.value)} 
-                                placeholder={t("e.g., Meera Devi")} 
-                                required 
-                            />
+                            <div className="flex items-center gap-2">
+                                <Input 
+                                    id="name" 
+                                    value={name} 
+                                    onChange={(e) => setName(e.target.value)} 
+                                    placeholder={t("e.g., Meera Devi")} 
+                                    required 
+                                    className="flex-grow"
+                                />
+                                <Button type="button" variant="outline" size="icon" onClick={() => toggleRecording('name')} disabled={isProcessing}>
+                                    {isRecording && recordingTarget === 'name' ? <StopCircle className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5" />}
+                                </Button>
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="story"><T>Your Story</T></Label>
-                            <Textarea 
+                             <Textarea 
                                 id="story" 
                                 value={story} 
                                 onChange={(e) => setStory(e.target.value)} 
@@ -161,14 +174,14 @@ export default function CreateArtisanProfilePage() {
                                 rows={6} 
                                 required 
                             />
+                            <div className="flex items-center justify-between pt-2">
+                                <Label><T>Or, tell us your story:</T></Label>
+                                <Button type="button" variant="outline" size="icon" onClick={() => toggleRecording('story')} disabled={isProcessing}>
+                                    {isRecording && recordingTarget === 'story' ? <StopCircle className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5" />}
+                                </Button>
+                            </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <Label><T>Or, tell us your story:</T></Label>
-                            <Button type="button" variant="outline" size="icon" onClick={toggleRecording} disabled={isProcessing}>
-                                {isRecording ? <StopCircle className="h-5 w-5 text-red-500" /> : <Mic className="h-5 w-5" />}
-                            </Button>
-                        </div>
-
+                        
                         <Button type="submit" size="lg" disabled={isProcessing || !name || !story}>
                             {isProcessing ? <Loader2 className="animate-spin mr-2" /> : null}
                             <T>Create Profile and Continue</T>

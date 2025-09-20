@@ -59,7 +59,7 @@ Here is the artisan's voice recording: {{media url=voiceRecordingDataUri}}
     *   Product Name: The name of the product.
     *   Description: A detailed description of the product.
     *   Materials: The materials used to create the product.
-    *   Origin: The origin or cultural context of the product.
+    *   Origin: The origin or cultural context of the product.Stick only to Indian regions.
     *   Inspiration: The artistic inspiration behind the product.
     *   Price: The price of the product.
 4g. **Handle Mismatch**: If 'isMatch' is false, do not fill in any of the product details; return them as empty strings or zero for the price.

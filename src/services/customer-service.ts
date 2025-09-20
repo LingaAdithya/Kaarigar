@@ -6,7 +6,7 @@ export type Artisan = {
   id: string;
   name: string;
   craft: string;
-  photo?: ImagePlaceholder; // Make photo optional
+  photo: ImagePlaceholder;
   bio?: string;
 };
 
@@ -38,6 +38,7 @@ export type ProductDetails = {
   artisan: {
     id: string;
     name: string;
+    photo: ImagePlaceholder;
     bio: string;
   };
   price: string;
@@ -133,6 +134,7 @@ export async function getProductDetails(
       id: artisanData.id,
       name: artisanData.name,
       bio: artisanData.bio || 'A passionate creator of beautiful handicrafts.',
+      photo: artisanData.photo,
     },
     price: `₹${productData.price}`,
     details: [

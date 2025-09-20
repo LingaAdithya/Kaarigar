@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { PlusCircle } from 'lucide-react';
 import { getDocs, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -56,7 +56,6 @@ export default function ArtisanProfileSelectionPage() {
                         <Card key={profile.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleProfileSelect(profile.id)}>
                             <CardContent className="flex items-center gap-4 p-4">
                                 <Avatar className="w-16 h-16">
-                                    <AvatarImage src={profile.photo.imageUrl} alt={profile.name} data-ai-hint={profile.photo.imageHint} />
                                     <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div className="text-left">
