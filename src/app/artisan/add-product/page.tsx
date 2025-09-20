@@ -1,13 +1,14 @@
+
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Upload, Mic, Camera, StopCircle, Loader2, Wand2, ArrowLeft, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Upload, Mic, Camera, StopCircle, Loader2, Wand2, ArrowLeft, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -19,7 +20,7 @@ import { addProduct } from '@/services/artisan-service';
 import { Progress } from '@/components/ui/progress';
 import { T, useLanguage } from '@/app/language-provider';
 
-type NewProduct = Parameters<typeof addProduct>[0];
+type NewProduct = Parameters<typeof addProduct>[1];
 
 enum PageState {
   FORM,
@@ -28,10 +29,12 @@ enum PageState {
   SUBMITTING,
 }
 
-export default function AddProductPage() {
+function AddProductContent() {
   const { toast } = useToast();
   const router = useRouter();
   const { t } = useLanguage();
+  const searchParams = useSearchParams();
+  const artisanId = searchParams.get('id');
   
   const [pageState, setPageState] = useState<PageState>(PageState.FORM);
   const [formData, setFormData] = useState<Partial<ArtisanVoiceToListingOutput>>({});
@@ -256,8 +259,8 @@ export default function AddProductPage() {
     setUploadProgress(0);
     const imageToSubmit = useEnhancedImage ? enhancedImage : originalImage;
 
-    if (!imageToSubmit) {
-      toast({ variant: 'destructive', title: t('No image to submit') });
+    if (!imageToSubmit || !artisanId) {
+      toast({ variant: 'destructive', title: t(!imageToSubmit ? 'No image to submit' : 'Artisan not found') });
       setPageState(PageState.FORM);
       return;
     }
@@ -271,13 +274,13 @@ export default function AddProductPage() {
         origin: formData.origin,
         inspiration: formData.inspiration,
       };
-      await addProduct(productData, imageToSubmit, setUploadProgress);
+      await addProduct(artisanId, productData, imageToSubmit, setUploadProgress);
       toast({
           title: t("Masterpiece Listed!"),
           description: t("Your new product is now available in the marketplace."),
       });
       // A short delay to let the user see the "complete" state
-      setTimeout(() => router.push('/artisan/home'), 1000);
+      setTimeout(() => router.push(`/artisan/home?id=${artisanId}`), 1000);
     } catch (error) {
       console.error("Error submitting to backend:", error);
       toast({
@@ -478,4 +481,13 @@ export default function AddProductPage() {
       </Card>
     </div>
   );
+}
+
+
+export default function AddProductPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <AddProductContent />
+        </Suspense>
+    )
 }

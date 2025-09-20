@@ -10,3 +10,4 @@ import '@/ai/flows/generate-product-details-from-image.ts';
 import '@/ai/flows/find-matching-product-flow.ts';
 import '@/ai/flows/text-to-speech.ts';
 import '@/ai/flows/translate-text.ts';
+import '@/ai/flows/enhance-artisan-story.ts';

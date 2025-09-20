@@ -9,6 +9,9 @@ import {
   where,
   serverTimestamp,
   Timestamp,
+  doc,
+  getDoc,
+  setDoc,
 } from 'firebase/firestore';
 import {
   ref,
@@ -16,6 +19,18 @@ import {
   getDownloadURL,
 } from 'firebase/storage';
 import {db, storage} from '@/lib/firebase';
+import { ImagePlaceholder } from '@/lib/placeholder-images';
+
+export type ArtisanProfile = {
+    id: string;
+    name: string;
+    craft: string;
+    bio: string;
+    photo: {
+        imageUrl: string;
+        imageHint: string;
+    }
+};
 
 export type PublishedItem = {
   id: string;
@@ -46,14 +61,44 @@ export type NewProduct = {
   inspiration: string;
 };
 
+export type NewArtisanProfile = {
+    name: string;
+    story: string;
+}
+
+export async function createArtisanProfile(profileData: NewArtisanProfile): Promise<string> {
+    const artisansCol = collection(db, 'artisans');
+    const newArtisanDoc = await addDoc(artisansCol, {
+        name: profileData.name,
+        bio: profileData.story,
+        craft: "Handicrafts", // Default craft
+        photo: { // Default photo
+            imageUrl: 'https://picsum.photos/seed/new-artisan/400/400',
+            imageHint: 'artisan portrait',
+        },
+        createdAt: serverTimestamp(),
+    });
+    return newArtisanDoc.id;
+}
+
 
 export async function addProduct(
+  artisanId: string,
   productData: Partial<NewProduct>,
   imageToSubmit: string,
   onProgress: (progress: number) => void
 ): Promise<void> {
   if (!imageToSubmit) {
     throw new Error('An image is required to add a product.');
+  }
+  if (!artisanId) {
+    throw new Error('An artisan ID is required to add a product.');
+  }
+
+  // Fetch artisan profile to get their name
+  const artisanProfile = await getArtisanProfile(artisanId);
+  if (!artisanProfile) {
+    throw new Error(`Artisan with ID ${artisanId} not found.`);
   }
 
   // 1. Upload the image to Firebase Storage
@@ -84,9 +129,9 @@ export async function addProduct(
       imageUrl: downloadURL,
       imageHint: "user uploaded product photo",
     },
-    artisan: { // Assuming a logged-in artisan, hardcoded for now
-      id: "artisan-ramesh",
-      name: "Ramesh Kumar",
+    artisan: {
+      id: artisanId,
+      name: artisanProfile.name,
     },
     createdAt: serverTimestamp(),
   });
@@ -94,9 +139,7 @@ export async function addProduct(
 
 
 export async function getPublishedItems(artisanId: string): Promise<PublishedItem[]> {
-  // Get items from Firestore, filtering by artisan
   const productsCol = collection(db, 'products');
-  // Remove the orderBy clause to avoid needing a composite index
   const q = query(
     productsCol, 
     where('artisan.id', '==', artisanId)
@@ -114,7 +157,6 @@ export async function getPublishedItems(artisanId: string): Promise<PublishedIte
     };
   });
   
-  // Sort the products by date in the code
   firestoreProducts.sort((a, b) => {
     if (a.createdAt && b.createdAt) {
       return b.createdAt.toMillis() - a.createdAt.toMillis();
@@ -123,6 +165,29 @@ export async function getPublishedItems(artisanId: string): Promise<PublishedIte
   });
 
   return firestoreProducts;
+}
+
+export async function getArtisanProfile(artisanId: string): Promise<ArtisanProfile | null> {
+    const artisanRef = doc(db, 'artisans', artisanId);
+    const artisanSnap = await getDoc(artisanRef);
+
+    if (!artisanSnap.exists()) {
+        return null;
+    }
+
+    const data = artisanSnap.data();
+
+    // Provide a default photo if one doesn't exist
+    const photo = data.photo || {
+        imageUrl: `https://picsum.photos/seed/${artisanId}/400/400`,
+        imageHint: 'artisan portrait',
+    };
+
+    return { 
+        id: artisanSnap.id, 
+        ...data,
+        photo: photo,
+     } as ArtisanProfile;
 }
 
 export async function getOrders(): Promise<Order[]> {

@@ -50,7 +50,7 @@ function RoleSelection() {
       <h1 className="font-headline text-4xl md:text-5xl mb-4"><T>Who are you?</T></h1>
       <p className="text-xl md:text-2xl text-foreground/80 mb-12"><T>Choose your journey with Karigar Konnect.</T></p>
       <div className="flex flex-col md:flex-row gap-6 justify-center">
-        <Link href="/artisan/home" passHref>
+        <Link href="/artisan/profile" passHref>
           <Button variant="default" size="lg" className="h-auto py-4 px-8 text-lg w-full md:w-auto shadow-lg hover:shadow-xl transition-shadow"><T>I am an Artisan</T></Button>
         </Link>
         <Link href="/customer/home" passHref>

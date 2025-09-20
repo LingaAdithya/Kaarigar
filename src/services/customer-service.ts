@@ -1,4 +1,4 @@
-import {collection, getDocs, doc, getDoc, query, limit} from 'firebase/firestore';
+import {collection, getDocs, doc, getDoc, query, limit, orderBy} from 'firebase/firestore';
 import {db} from '@/lib/firebase';
 import type {ImagePlaceholder} from '@/lib/placeholder-images';
 
@@ -50,7 +50,7 @@ export type ProductDetails = {
 
 export async function getArtisansOfTheDay(): Promise<Artisan[]> {
   const artisansCol = collection(db, 'artisans');
-  const q = query(artisansCol, limit(2));
+  const q = query(artisansCol, orderBy('createdAt', 'desc'), limit(2));
   const artisanSnapshot = await getDocs(q);
   const artisanList = artisanSnapshot.docs.map(doc => {
     const data = doc.data();
@@ -76,8 +76,8 @@ export async function getRegions(): Promise<Region[]> {
 
 export async function getCuratedProducts(): Promise<Product[]> {
   const productsCol = collection(db, 'products');
-  // Simple query for demonstration. A real app might have a "curated" flag.
-  const q = query(productsCol, limit(4));
+  // Fetches the 4 newest products.
+  const q = query(productsCol, orderBy('createdAt', 'desc'), limit(4));
   const productSnapshot = await getDocs(q);
   const productList = productSnapshot.docs.map(doc => {
     const data = doc.data();
