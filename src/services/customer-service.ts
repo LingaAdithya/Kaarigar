@@ -6,7 +6,7 @@ export type Artisan = {
   id: string;
   name: string;
   craft: string;
-  photo: ImagePlaceholder;
+  photo?: ImagePlaceholder; // Make photo optional
   bio?: string;
 };
 
@@ -38,7 +38,6 @@ export type ProductDetails = {
   artisan: {
     id: string;
     name: string;
-    photo: ImagePlaceholder;
     bio: string;
   };
   price: string;
@@ -123,17 +122,17 @@ export async function getProductDetails(
     imageHint: 'india map rajasthan',
   };
 
+  const images = productData.images && productData.images.length > 0 ? productData.images : [productData.image];
+
   return {
     id: productSnap.id,
     name: productData.name,
-    // For now, using the main image multiple times for the gallery
-    images: [productData.image, productData.image, productData.image],
+    images: images,
     story: productData.description,
     artisan: {
       id: artisanData.id,
       name: artisanData.name,
       bio: artisanData.bio || 'A passionate creator of beautiful handicrafts.',
-      photo: artisanData.photo,
     },
     price: `₹${productData.price}`,
     details: [

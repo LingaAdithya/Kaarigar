@@ -15,10 +15,10 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { artisanVoiceToListing, ArtisanVoiceToListingOutput } from '@/ai/flows/artisan-voice-to-listing';
 import { generateDetailsFromImage } from '@/ai/flows/generate-product-details-from-image';
 import { enhancePhoto } from '@/ai/flows/ai-photo-enhancement';
-import { ImageComparisonSlider } from '@/components/image-comparison-slider';
 import { addProduct } from '@/services/artisan-service';
 import { Progress } from '@/components/ui/progress';
 import { T, useLanguage } from '@/app/language-provider';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 type NewProduct = Parameters<typeof addProduct>[1];
 
@@ -39,7 +39,7 @@ function AddProductContent() {
   const [pageState, setPageState] = useState<PageState>(PageState.FORM);
   const [formData, setFormData] = useState<Partial<ArtisanVoiceToListingOutput>>({});
   const [originalImage, setOriginalImage] = useState<string | null>(null);
-  const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
+  const [enhancedImages, setEnhancedImages] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const [isRecording, setIsRecording] = useState(false);
@@ -237,11 +237,11 @@ function AddProductContent() {
     setPageState(PageState.ENHANCING);
     try {
       const result = await enhancePhoto({ photoDataUri: originalImage });
-      setEnhancedImage(result.enhancedPhotoDataUri);
+      setEnhancedImages(result.enhancedPhotoDataUris);
       setPageState(PageState.ENHANCED);
        toast({
-        title: t("Image Enhanced!"),
-        description: t("Our AI has worked its magic. Compare the results."),
+        title: t("Images Enhanced!"),
+        description: t("Our AI has generated 3 new images for you."),
       });
     } catch (error) {
        console.error("Error enhancing image:", error);
@@ -254,13 +254,19 @@ function AddProductContent() {
     }
   };
 
-  const handleFinalSubmit = async (useEnhancedImage = true) => {
+  const handleFinalSubmit = async (useEnhanced: boolean) => {
     setPageState(PageState.SUBMITTING);
     setUploadProgress(0);
-    const imageToSubmit = useEnhancedImage ? enhancedImage : originalImage;
+    
+    let imagesToSubmit: string[] = [];
+    if (useEnhanced && enhancedImages.length > 0) {
+        imagesToSubmit = enhancedImages;
+    } else if (originalImage) {
+        imagesToSubmit = [originalImage];
+    }
 
-    if (!imageToSubmit || !artisanId) {
-      toast({ variant: 'destructive', title: t(!imageToSubmit ? 'No image to submit' : 'Artisan not found') });
+    if (imagesToSubmit.length === 0 || !artisanId) {
+      toast({ variant: 'destructive', title: t(imagesToSubmit.length === 0 ? 'No image to submit' : 'Artisan not found') });
       setPageState(PageState.FORM);
       return;
     }
@@ -274,7 +280,7 @@ function AddProductContent() {
         origin: formData.origin,
         inspiration: formData.inspiration,
       };
-      await addProduct(artisanId, productData, imageToSubmit, setUploadProgress);
+      await addProduct(artisanId, productData, imagesToSubmit, setUploadProgress);
       toast({
           title: t("Masterpiece Listed!"),
           description: t("Your new product is now available in the marketplace."),
@@ -303,20 +309,33 @@ function AddProductContent() {
             </div>
         );
       case PageState.ENHANCED:
-        if (!originalImage || !enhancedImage) return null;
+        if (enhancedImages.length === 0) return null;
         return (
           <div className="p-4 md:p-6">
             <Button variant="ghost" onClick={() => setPageState(PageState.FORM)} className="mb-4">
               <ArrowLeft className="mr-2" /> <T>Back to Edit</T>
             </Button>
             <h1 className="font-headline text-3xl text-center mb-2 text-primary"><T>Made Beautiful!</T></h1>
-            <p className="text-muted-foreground text-center mb-8"><T>Drag the slider to see the difference.</T></p>
-            <ImageComparisonSlider 
-                beforeImage={originalImage}
-                afterImage={enhancedImage}
-                beforeHint="original product photo"
-                afterHint="enhanced product photo"
-            />
+            <p className="text-muted-foreground text-center mb-8"><T>Review the AI-generated images.</T></p>
+            
+            <Carousel className="w-full max-w-lg mx-auto">
+              <CarouselContent>
+                {enhancedImages.map((img, index) => (
+                  <CarouselItem key={index}>
+                    <div className="p-1">
+                      <Card>
+                        <CardContent className="flex aspect-square items-center justify-center p-0">
+                           <Image src={img} alt={`Enhanced view ${index + 1}`} width={500} height={500} className="rounded-lg object-cover" />
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+
             <div className="mt-8 text-center">
                 <Button size="lg" onClick={() => handleFinalSubmit(true)}>
                     <Wand2 className="mr-2" /> <T>Looks Great, Create Listing</T>

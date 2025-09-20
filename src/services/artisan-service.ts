@@ -85,50 +85,63 @@ export async function createArtisanProfile(profileData: NewArtisanProfile): Prom
 export async function addProduct(
   artisanId: string,
   productData: Partial<NewProduct>,
-  imageToSubmit: string,
+  imagesToSubmit: string[],
   onProgress: (progress: number) => void
 ): Promise<void> {
-  if (!imageToSubmit) {
-    throw new Error('An image is required to add a product.');
+  if (!imagesToSubmit || imagesToSubmit.length === 0) {
+    throw new Error('At least one image is required to add a product.');
   }
   if (!artisanId) {
     throw new Error('An artisan ID is required to add a product.');
   }
 
-  // Fetch artisan profile to get their name
   const artisanProfile = await getArtisanProfile(artisanId);
   if (!artisanProfile) {
     throw new Error(`Artisan with ID ${artisanId} not found.`);
   }
 
-  // 1. Upload the image to Firebase Storage
-  const imageBlob = await fetch(imageToSubmit).then(r => r.blob());
-  const storageRef = ref(storage, `products/${Date.now()}_${productData.name || 'product'}`);
-  const uploadTask = uploadBytesResumable(storageRef, imageBlob);
+  // Upload all images to Firebase Storage in parallel
+  const uploadPromises = imagesToSubmit.map(async (imageUri) => {
+    const imageBlob = await fetch(imageUri).then((r) => r.blob());
+    const storageRef = ref(storage,`products/${Date.now()}_${productData.name || 'product'}_${Math.random()}`);
+    const uploadTask = uploadBytesResumable(storageRef, imageBlob);
 
-  uploadTask.on('state_changed',
-    (snapshot) => {
-      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      onProgress(progress);
-    },
-    (error) => {
-      console.error('Upload failed:', error);
-      throw error;
-    }
-  );
+    return new Promise<string>((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // This progress is for a single file. A more complex implementation
+          // could average the progress of all files. For now, we'll just report the last one.
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          onProgress(progress);
+        },
+        (error) => {
+          console.error('Upload failed:', error);
+          reject(error);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          resolve(downloadURL);
+        }
+      );
+    });
+  });
 
-  await uploadTask;
-  const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+  const downloadURLs = await Promise.all(uploadPromises);
 
-  // 2. Add the product to Firestore
+  const imagesForFirestore = downloadURLs.map(url => ({
+      imageUrl: url,
+      imageHint: "user uploaded product photo",
+  }));
+
+  // Add the product to Firestore
   const productsCol = collection(db, 'products');
   await addDoc(productsCol, {
     ...productData,
     price: Number(productData.price) || 0,
-    image: {
-      imageUrl: downloadURL,
-      imageHint: "user uploaded product photo",
-    },
+    // Use the first image as the primary, and store all in an array
+    image: imagesForFirestore[0], 
+    images: imagesForFirestore,
     artisan: {
       id: artisanId,
       name: artisanProfile.name,

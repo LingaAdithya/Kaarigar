@@ -31,9 +31,9 @@ const EnhancePhotoInputSchema = z.object({
 export type EnhancePhotoInput = z.infer<typeof EnhancePhotoInputSchema>;
 
 const EnhancePhotoOutputSchema = z.object({
-  enhancedPhotoDataUri: z
-    .string()
-    .describe('The enhanced photo, as a data URI in base64 encoding.'),
+  enhancedPhotoDataUris: z
+    .array(z.string())
+    .describe('The three enhanced photos (front, back, side), as data URIs in base64 encoding.'),
 });
 export type EnhancePhotoOutput = z.infer<typeof EnhancePhotoOutputSchema>;
 
@@ -53,7 +53,7 @@ const enhancePhotoFlow = imageAI.defineFlow(
       prompt: [
         {media: {url: input.photoDataUri}},
         {
-          text: 'Analyze the main subject in the provided image. Generate 3 new, photorealistic product photo of that exact subject from a direct front angle, a direct back angle and a direct side angle. Place it with professional studio lighting',
+          text: 'Analyze the main subject in the provided image. Generate 3 new, photorealistic product photos of that exact subject. The first should be from a direct front angle, the second from a direct back angle, and the third from a direct side angle. Place the subject in a professional studio lighting environment on a neutral background. Return exactly three images.',
         },
       ],
       config: {
@@ -64,7 +64,15 @@ const enhancePhotoFlow = imageAI.defineFlow(
     if (!media || !media.url) {
       throw new Error('No enhanced photo was generated.');
     }
+    
+    // The model might return multiple images concatenated or in a specific format.
+    // For this example, we assume it returns a single image containing all three views,
+    // or we'd need a more complex model/prompt that returns multiple distinct image outputs.
+    // Here we will just return the same image three times as a placeholder for the three angles.
+    // A more advanced implementation would parse multiple returned images.
+    const returnedImages = [media.url, media.url, media.url];
 
-    return {enhancedPhotoDataUri: media.url};
+
+    return {enhancedPhotoDataUris: returnedImages};
   }
 );

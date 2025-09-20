@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import { PlayIcon } from '@/components/icons/PlayIcon';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { getProductDetails, ProductDetails } from '@/services/customer-service';
 import { notFound } from 'next/navigation';
@@ -139,12 +139,10 @@ function ProductPageContent({ id }: { id: string }) {
                   <h2 className="font-headline text-2xl mb-4"><T>Meet the Artisan</T></h2>
                   <div className="flex items-center gap-4 mb-4">
                     <Avatar className="w-16 h-16">
-                      {artisan.photo && <AvatarImage src={artisan.photo.imageUrl} alt={artisan.name} data-ai-hint={artisan.photo.imageHint} />}
                       <AvatarFallback>{artisan.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
                       <h3 className="font-semibold text-lg"><T>{artisan.name}</T></h3>
-                      <p className="text-sm text-muted-foreground">{translatedBio || <T>{artisan.bio}</T>}</p>
                     </div>
                   </div>
                   <Button variant="outline" className="w-full bg-card hover:bg-secondary" onClick={handleHearStory} disabled={isGeneratingAudio}>
