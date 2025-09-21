@@ -1,3 +1,4 @@
+
 import {collection, getDocs, doc, getDoc, query, limit, orderBy} from 'firebase/firestore';
 import {db} from '@/lib/firebase';
 import type {ImagePlaceholder} from '@/lib/placeholder-images';
@@ -76,8 +77,8 @@ export async function getRegions(): Promise<Region[]> {
 
 export async function getCuratedProducts(): Promise<Product[]> {
   const productsCol = collection(db, 'products');
-  // Fetches the 4 newest products.
-  const q = query(productsCol, orderBy('createdAt', 'desc'), limit(4));
+  // Fetches all products, ordered by newest first.
+  const q = query(productsCol, orderBy('createdAt', 'desc'));
   const productSnapshot = await getDocs(q);
   const productList = productSnapshot.docs.map(doc => {
     const data = doc.data();

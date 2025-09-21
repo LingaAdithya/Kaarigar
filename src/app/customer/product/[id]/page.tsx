@@ -138,12 +138,15 @@ function ProductPageContent({ id }: { id: string }) {
               <Card className="bg-card/50 border-border/50 shadow-sm">
                 <CardContent className="p-6">
                   <h2 className="font-headline text-2xl mb-4"><T>Meet the Artisan</T></h2>
-                  <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-start gap-4 mb-4">
                     <Avatar className="w-16 h-16">
                       <AvatarFallback>{artisan.name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div>
+                    <div className="flex-1">
                       <h3 className="font-semibold text-lg"><T>{artisan.name}</T></h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        <T>{artisan.bio}</T>
+                      </p>
                     </div>
                   </div>
                   <Button variant="outline" className="w-full bg-card hover:bg-secondary" onClick={handleHearStory} disabled={isGeneratingAudio}>
