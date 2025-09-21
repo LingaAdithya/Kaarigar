@@ -23,7 +23,7 @@ const GenerateDetailsFromImageOutputSchema = z.object({
   productName: z.string().describe('A creative and fitting name for the product.'),
   description: z.string().describe('A detailed and culturally rich description of the product.'),
   materials: z.string().describe('The likely materials used to create the product.'),
-  origin: z.string().describe('The likely cultural origin or region of the product.'),
+  origin: z.string().describe('The likely indian region of the product- The city, district and state'),
   inspiration: z.string().describe('The potential artistic inspiration behind the product.'),
 });
 export type GenerateDetailsFromImageOutput = z.infer<typeof GenerateDetailsFromImageOutputSchema>;
@@ -36,7 +36,7 @@ const prompt = ai.definePrompt({
   name: 'generateDetailsFromImagePrompt',
   input: {schema: GenerateDetailsFromImageInputSchema},
   output: {schema: GenerateDetailsFromImageOutputSchema},
-  prompt: `You are an AI assistant and cultural expert for an artisan marketplace. Your task is to analyze the provided product image and generate compelling, culturally-aware product details.
+  prompt: `You are an AI assistant and cultural expert for an Indian artisan marketplace. Your task is to analyze the provided product image and generate compelling, Indian culturally-aware product details.
 
   Based on the image, infer the following:
   - A creative and fitting name for the product.
